@@ -33,40 +33,9 @@ function renderPlot() {
       plotContainer.value.innerHTML = "";
     }
 
-    // Create sample data (if not already defined in the code)
-    const sampleData = [
-      { value: 22, category: "Glycine", amino: "Glycine", percent: 22 },
-      { value: 22, category: "Other", amino: "Other", percent: 22 },
-      { value: 12, category: "Proline", amino: "Proline", percent: 12 },
-      {
-        value: 12,
-        category: "Hydroxyproline",
-        amino: "Hydroxyproline",
-        percent: 12,
-      },
-      {
-        value: 10,
-        category: "Glutamic Acid",
-        amino: "Glutamic Acid",
-        percent: 10,
-      },
-      { value: 9, category: "Arginine", amino: "Arginine", percent: 9 },
-      { value: 8, category: "Alanine", amino: "Alanine", percent: 8 },
-      {
-        value: 6,
-        category: "Aspartic Acid",
-        amino: "Aspartic Acid",
-        percent: 6,
-      },
-    ];
-
-    // Define common variables that might be used in the plot code
-    const data = sampleData;
-
     // Create sandbox function to execute the plot code safely
     const createPlot = new Function(
       "Plot",
-      "data",
       `
       try {
         return ${props.plotCode};
@@ -77,7 +46,7 @@ function renderPlot() {
     );
 
     // Execute the plot code and append to container
-    const plot = createPlot(Plot, data);
+    const plot = createPlot(Plot);
 
     if (plot && plotContainer.value) {
       plotContainer.value.appendChild(plot);
@@ -167,9 +136,6 @@ watch(
   width: 100%;
   padding: 1rem;
   min-height: 300px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .plot-controls {
@@ -219,6 +185,7 @@ watch(
   white-space: pre-wrap;
   word-break: break-word;
   color: #333;
+  text-align: left;
 }
 
 .placeholder {
