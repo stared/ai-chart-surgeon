@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { ChartFeedback } from "../types"; // Corrected import path
+import JSON5 from "json5";
 
 /**
  * A placeholder service for Anthropic API integration.
@@ -50,6 +51,71 @@ async function fileToGenerativePart(file: File): Promise<Base64ImageInput> {
   };
 }
 
+/**
+ * Parse and format the AI response
+ */
+function parseAIResponse(rawResponse: string): ChartFeedback {
+  try {
+    // Try standard JSON parse first
+    const parsedResponse = JSON.parse(rawResponse);
+    return formatParsedResponse(parsedResponse);
+  } catch (error) {
+    console.log("Standard JSON parsing failed, trying JSON5...");
+
+    try {
+      // Attempt to parse with JSON5 which is more forgiving
+      const parsedResponse = JSON5.parse(rawResponse);
+      return formatParsedResponse(parsedResponse);
+    } catch (error) {
+      console.error("JSON5 parsing failed too:", error);
+
+      // If all parsing fails, try to construct a response from regex extraction
+      console.log("Attempting direct field extraction...");
+
+      const extracted = {
+        strengths: extractArrayOrString(rawResponse, "strengths"),
+        weaknesses: extractArrayOrString(rawResponse, "weaknesses"),
+        suggestions: extractArrayOrString(rawResponse, "suggestions"),
+        plotCode: extractPlotCode(rawResponse),
+      };
+
+      if (
+        extracted.strengths &&
+        extracted.weaknesses &&
+        extracted.suggestions &&
+        extracted.plotCode
+      ) {
+        console.log("Successfully extracted data through regex");
+        return extracted;
+      }
+
+      throw new Error("Could not parse AI response");
+    }
+  }
+}
+
+/**
+ * Format parsed response with bullet points for arrays
+ */
+function formatParsedResponse(parsedResponse: any): ChartFeedback {
+  return {
+    strengths: formatField(parsedResponse.strengths),
+    weaknesses: formatField(parsedResponse.weaknesses),
+    suggestions: formatField(parsedResponse.suggestions),
+    plotCode: parsedResponse.plotCode,
+  };
+}
+
+/**
+ * Format a field value, converting arrays to bulleted lists
+ */
+function formatField(value: string | string[]): string {
+  if (Array.isArray(value)) {
+    return "• " + value.join("\n• ");
+  }
+  return value;
+}
+
 export async function analyzeChart(file: File): Promise<ChartFeedback> {
   const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY;
 
@@ -78,7 +144,25 @@ export async function analyzeChart(file: File): Promise<ChartFeedback> {
   try {
     const imagePart = await fileToGenerativePart(file);
 
-    const systemPrompt = `You are a data visualization expert. Your task is to analyze charts critically ("roast" them), provide constructive feedback, and generate code for an improved version using Observable Plot (JavaScript). Respond ONLY with a valid JSON object containing the keys "strengths", "weaknesses", "suggestions", and "plotCode". Do not include any other text, explanations, or markdown formatting outside the JSON structure. The plotCode should be JavaScript code ready to be used with Observable Plot. Assume the data is implicitly available or part of the chart context; focus on the plotting code itself.`;
+    const systemPrompt = `You are a data visualization expert. Your task is to analyze charts critically ("roast" them), provide constructive feedback, and generate code for an improved version using Observable Plot (JavaScript).
+
+Respond ONLY with a valid JSON object containing the keys:
+- "strengths": An array of string points about what works well in the chart
+- "weaknesses": An array of string points about what doesn't work well
+- "suggestions": An array of string points about how to improve the chart
+- "plotCode": A string containing JavaScript code for Observable Plot
+
+IMPORTANT: For the "plotCode" value, use double-quoted strings and properly escape any internal quotes. Line breaks must be escaped with \\n. This is crucial for valid JSON format.
+
+Example response format:
+{
+  "strengths": ["Point 1", "Point 2"],
+  "weaknesses": ["Issue 1", "Issue 2"],
+  "suggestions": ["Suggestion 1", "Suggestion 2"],
+  "plotCode": "Plot.plot({ ... })"
+}
+
+The plotCode should assume data is implicitly available and focus on the plotting code itself.`;
 
     const userMessage: Anthropic.Messages.MessageParam = {
       role: "user",
@@ -117,42 +201,21 @@ export async function analyzeChart(file: File): Promise<ChartFeedback> {
     const rawJson = response.content[0].text;
     console.log("Raw API Response Text:", rawJson); // Log the raw response text
 
-    // Attempt to parse the JSON response
     try {
-      const parsedResponse = JSON.parse(rawJson);
-
-      // Basic validation of the parsed structure
-      if (
-        typeof parsedResponse.strengths !== "string" ||
-        typeof parsedResponse.weaknesses !== "string" ||
-        typeof parsedResponse.suggestions !== "string" ||
-        typeof parsedResponse.plotCode !== "string"
-      ) {
-        throw new Error(
-          "Parsed JSON response does not match the expected structure."
-        );
-      }
-
-      // Assuming ChartFeedback type matches the JSON structure { strengths, weaknesses, suggestions, plotCode }
-      // If not, this cast needs adjustment or the type needs updating.
-      return parsedResponse as ChartFeedback;
-    } catch (parseError) {
-      console.error("Failed to parse JSON response:", parseError);
-      console.error("Raw response that failed parsing:", rawJson);
-      // Provide a structured error feedback if parsing fails
+      // Use our robust parsing function
+      return parseAIResponse(rawJson);
+    } catch (error) {
+      console.error("All parsing methods failed:", error);
       return {
         strengths: "Error: Could not process AI response.",
-        weaknesses: `Failed to parse the response from the AI. Raw response: ${rawJson.substring(
-          0,
-          200
-        )}...`, // Show partial raw response for debugging
+        weaknesses:
+          "Failed to parse the response from the AI. Please try again.",
         suggestions:
-          "The AI might have provided an invalid JSON format. Check the console logs for details.",
+          "The AI provided an invalid format. Check the console logs for details.",
         plotCode: `// Error parsing AI response: ${
-          parseError instanceof Error ? parseError.message : String(parseError)
+          error instanceof Error ? error.message : String(error)
         }`,
       };
-      // throw new Error(`Failed to parse JSON response from Anthropic API: ${parseError}`);
     }
   } catch (error) {
     console.error("Error in analyzeChart function:", error);
@@ -165,4 +228,57 @@ export async function analyzeChart(file: File): Promise<ChartFeedback> {
       plotCode: `// Analysis error: ${errorMessage}`,
     };
   }
+}
+
+// Helper function to extract array or string from JSON using regex
+function extractArrayOrString(json: string, key: string): string {
+  // Try to match an array of strings
+  const arrayMatch = new RegExp(`"${key}"\\s*:\\s*\\[(.*?)\\]`, "s").exec(json);
+  if (arrayMatch && arrayMatch[1]) {
+    // Extract individual strings from the array
+    const stringMatches = arrayMatch[1].match(/"([^"]*?)"/g);
+    if (stringMatches) {
+      // Remove quotes and join with bullet points
+      return "• " + stringMatches.map((s) => s.replace(/"/g, "")).join("\n• ");
+    }
+  }
+
+  // Try to match a simple string
+  const stringMatch = new RegExp(`"${key}"\\s*:\\s*"(.*?)"`, "s").exec(json);
+  if (stringMatch && stringMatch[1]) {
+    return stringMatch[1];
+  }
+
+  return "";
+}
+
+// Helper function to extract plot code from JSON using regex
+function extractPlotCode(json: string): string {
+  // First try to match code inside backticks
+  const backtickMatch = new RegExp(
+    `"plotCode"\\s*:\\s*\`([\\s\\S]*?)\``,
+    "s"
+  ).exec(json);
+  if (backtickMatch && backtickMatch[1]) {
+    return backtickMatch[1];
+  }
+
+  // Try to match multiline code inside quotes
+  const multilineMatch = new RegExp(
+    `"plotCode"\\s*:\\s*"([\\s\\S]*?)"(?=,|\\s*\\})`,
+    "s"
+  ).exec(json);
+  if (multilineMatch && multilineMatch[1]) {
+    return multilineMatch[1].replace(/\\"/g, '"').replace(/\\\\/g, "\\");
+  }
+
+  // Try to match single line code
+  const singleLineMatch = new RegExp(`"plotCode"\\s*:\\s*"(.*?)"`, "s").exec(
+    json
+  );
+  if (singleLineMatch && singleLineMatch[1]) {
+    return singleLineMatch[1].replace(/\\"/g, '"').replace(/\\\\/g, "\\");
+  }
+
+  return "";
 }

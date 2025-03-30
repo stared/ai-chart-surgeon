@@ -14,40 +14,14 @@ const feedbackData = computed(() => {
     return props.feedback;
   }
 
-  // Default empty feedback
+  // Default empty feedback for the new structure
   return {
-    chartType: "",
-    generalFeedback: "",
-    aestheticsFeedback: "",
-    accessibilityFeedback: "",
-    roast: "",
-    extractedData: "",
+    strengths: "",
+    weaknesses: "",
+    suggestions: "",
     plotCode: "",
   };
 });
-
-// Simulating an API call to Anthropic
-function analyzeChart(file: File) {
-  // This would be an actual API call in production
-  // Here we're just simulating the response
-
-  // Simulated delay to mimic API call
-  setTimeout(() => {
-    feedbackData.value = {
-      chartType: "Bar Chart",
-      generalFeedback:
-        "This chart effectively shows the data comparison but could benefit from clearer labeling.",
-      aestheticsFeedback:
-        "The color scheme lacks contrast and the typography is inconsistent.",
-      accessibilityFeedback:
-        "The chart may be difficult to interpret for users with color vision deficiencies.",
-      roast:
-        'This chart looks like it was made by someone who just discovered Excel yesterday. The colors are fighting each other harder than siblings over the last cookie. If data visualization had a "least effort" award, this would be a strong contender.',
-      extractedData: "Category A: 45, Category B: 67, Category C: 32",
-      plotCode: 'Plot.barY(data, {x: "category", y: "value"}).plot()',
-    };
-  }, 2000);
-}
 </script>
 
 <template>
@@ -64,36 +38,19 @@ function analyzeChart(file: File) {
     </div>
 
     <div v-else class="feedback-sections">
-      <section class="feedback-section">
-        <h3>Chart Type</h3>
-        <p>{{ feedbackData.chartType || "Not identified" }}</p>
+      <section class="feedback-section strengths">
+        <h3>Strengths ✓</h3>
+        <p v-html="feedbackData.strengths || 'No strengths identified'"></p>
       </section>
 
-      <section class="feedback-section">
-        <h3>General Feedback</h3>
-        <p>{{ feedbackData.generalFeedback || "No feedback available" }}</p>
+      <section class="feedback-section weaknesses">
+        <h3>Weaknesses ✗</h3>
+        <p v-html="feedbackData.weaknesses || 'No weaknesses identified'"></p>
       </section>
 
-      <section class="feedback-section">
-        <h3>Aesthetics</h3>
-        <p>{{ feedbackData.aestheticsFeedback || "No feedback available" }}</p>
-      </section>
-
-      <section class="feedback-section">
-        <h3>Accessibility</h3>
-        <p>
-          {{ feedbackData.accessibilityFeedback || "No feedback available" }}
-        </p>
-      </section>
-
-      <section class="feedback-section roast">
-        <h3>The Roast 🔥</h3>
-        <p>{{ feedbackData.roast || "No roast available" }}</p>
-      </section>
-
-      <section class="feedback-section">
-        <h3>Extracted Data</h3>
-        <pre>{{ feedbackData.extractedData || "No data extracted" }}</pre>
+      <section class="feedback-section suggestions">
+        <h3>Suggested Improvements 💡</h3>
+        <p v-html="feedbackData.suggestions || 'No suggestions available'"></p>
       </section>
 
       <section class="feedback-section">
@@ -162,9 +119,19 @@ function analyzeChart(file: File) {
   font-size: 1.2rem;
 }
 
-.roast {
+.strengths {
+  background-color: rgba(100, 255, 100, 0.1);
+  border-left: 4px solid #64ff64;
+}
+
+.weaknesses {
   background-color: rgba(255, 100, 100, 0.1);
   border-left: 4px solid #ff6464;
+}
+
+.suggestions {
+  background-color: rgba(255, 255, 100, 0.1);
+  border-left: 4px solid #ffff64;
 }
 
 pre {
