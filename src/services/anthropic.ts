@@ -76,6 +76,7 @@ function parseAIResponse(rawResponse: string): ChartFeedback {
         strengths: extractArrayOrString(rawResponse, "strengths"),
         weaknesses: extractArrayOrString(rawResponse, "weaknesses"),
         suggestions: extractArrayOrString(rawResponse, "suggestions"),
+        roast: extractRoast(rawResponse),
         plotCode: extractPlotCode(rawResponse),
       };
 
@@ -83,6 +84,7 @@ function parseAIResponse(rawResponse: string): ChartFeedback {
         extracted.strengths &&
         extracted.weaknesses &&
         extracted.suggestions &&
+        extracted.roast &&
         extracted.plotCode
       ) {
         console.log("Successfully extracted data through regex");
@@ -102,6 +104,7 @@ function formatParsedResponse(parsedResponse: any): ChartFeedback {
     strengths: formatField(parsedResponse.strengths),
     weaknesses: formatField(parsedResponse.weaknesses),
     suggestions: formatField(parsedResponse.suggestions),
+    roast: parsedResponse.roast,
     plotCode: parsedResponse.plotCode,
   };
 }
@@ -130,6 +133,7 @@ export async function analyzeChart(file: File): Promise<ChartFeedback> {
       weaknesses:
         "Please configure the VITE_ANTHROPIC_API_KEY environment variable.",
       suggestions: "Refer to the project documentation.",
+      roast: "// API key missing",
       plotCode: "// API key missing",
     };
     // throw new Error("Anthropic API key is missing. Set VITE_ANTHROPIC_API_KEY environment variable.");
@@ -148,8 +152,9 @@ export async function analyzeChart(file: File): Promise<ChartFeedback> {
 
 Respond ONLY with a valid JSON object containing the keys:
 - "strengths": An array of string points about what works well in the chart
-- "weaknesses": An array of string points about what doesn't work well
+- "weaknesses": An array of string points about what doesn't work well  
 - "suggestions": An array of string points about how to improve the chart
+- "roast": A single string with an edgy, Reddit-style roast of the chart focusing on its specific flaws, missed intentions, and problems with its creator
 - "plotCode": A string containing JavaScript code for Observable Plot
 
 IMPORTANT: For the "plotCode" value, use double-quoted strings and properly escape any internal quotes. Line breaks must be escaped with \\n. This is crucial for valid JSON format.
@@ -159,6 +164,7 @@ Example response format:
   "strengths": ["Point 1", "Point 2"],
   "weaknesses": ["Issue 1", "Issue 2"],
   "suggestions": ["Suggestion 1", "Suggestion 2"],
+  "roast": "Roast text here",
   "plotCode": "Plot.plot({ ... })"
 }
 
@@ -212,9 +218,12 @@ The plotCode should assume data is implicitly available and focus on the plottin
           "Failed to parse the response from the AI. Please try again.",
         suggestions:
           "The AI provided an invalid format. Check the console logs for details.",
-        plotCode: `// Error parsing AI response: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
+        roast:
+          "// Error parsing AI response: " +
+          (error instanceof Error ? error.message : String(error)),
+        plotCode:
+          "// Error parsing AI response: " +
+          (error instanceof Error ? error.message : String(error)),
       };
     }
   } catch (error) {
@@ -225,7 +234,8 @@ The plotCode should assume data is implicitly available and focus on the plottin
       strengths: "Error: Analysis failed.",
       weaknesses: `An error occurred: ${errorMessage}`,
       suggestions: "Please check the file or console logs and try again.",
-      plotCode: `// Analysis error: ${errorMessage}`,
+      roast: "// Analysis error: " + errorMessage,
+      plotCode: "// Analysis error: " + errorMessage,
     };
   }
 }
@@ -247,6 +257,35 @@ function extractArrayOrString(json: string, key: string): string {
   const stringMatch = new RegExp(`"${key}"\\s*:\\s*"(.*?)"`, "s").exec(json);
   if (stringMatch && stringMatch[1]) {
     return stringMatch[1];
+  }
+
+  return "";
+}
+
+// Helper function to extract roast from JSON using regex
+function extractRoast(json: string): string {
+  // First try to match code inside backticks
+  const backtickMatch = new RegExp(
+    `"roast"\\s*:\\s*\`([\\s\\S]*?)\``,
+    "s"
+  ).exec(json);
+  if (backtickMatch && backtickMatch[1]) {
+    return backtickMatch[1];
+  }
+
+  // Try to match multiline code inside quotes
+  const multilineMatch = new RegExp(
+    `"roast"\\s*:\\s*"([\\s\\S]*?)"(?=,|\\s*\\})`,
+    "s"
+  ).exec(json);
+  if (multilineMatch && multilineMatch[1]) {
+    return multilineMatch[1].replace(/\\"/g, '"').replace(/\\\\/g, "\\");
+  }
+
+  // Try to match single line code
+  const singleLineMatch = new RegExp(`"roast"\\s*:\\s*"(.*?)"`, "s").exec(json);
+  if (singleLineMatch && singleLineMatch[1]) {
+    return singleLineMatch[1].replace(/\\"/g, '"').replace(/\\\\/g, "\\");
   }
 
   return "";
