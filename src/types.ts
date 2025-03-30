@@ -1,10 +1,7 @@
 export interface ChartFeedback {
-  chartType: string;
-  generalFeedback: string;
-  aestheticsFeedback: string;
-  accessibilityFeedback: string;
-  roast: string;
-  extractedData: string;
+  strengths: string;
+  weaknesses: string;
+  suggestions: string;
   plotCode: string;
 }
 
