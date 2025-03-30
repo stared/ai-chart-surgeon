@@ -154,7 +154,7 @@ Respond ONLY with a valid JSON object containing the keys:
 - "strengths": An array of string points about what works well in the chart
 - "weaknesses": An array of string points about what doesn't work well  
 - "suggestions": An array of string points about how to improve the chart
-- "roast": A single string with an edgy, Reddit-style roast of the chart focusing on its specific flaws, missed intentions, and problems with its creator
+- "roast": A brief Reddit-style roast of the chart (1-3 sentences MAX) with a killer punchline. Be brutal, edgy, witty, and clever. Roast of the chart focusing on its specific flaws, design choices, missed intentions, and implied problems with its creator.
 - "plotCode": A string containing JavaScript code for Observable Plot
 
 IMPORTANT: For the "plotCode" value, use double-quoted strings and properly escape any internal quotes. Line breaks must be escaped with \\n. This is crucial for valid JSON format.
@@ -164,7 +164,6 @@ Example response format:
   "strengths": ["Point 1", "Point 2"],
   "weaknesses": ["Issue 1", "Issue 2"],
   "suggestions": ["Suggestion 1", "Suggestion 2"],
-  "roast": "Roast text here",
   "plotCode": "Plot.plot({ ... })"
 }
 

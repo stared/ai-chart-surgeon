@@ -103,15 +103,6 @@ const suggestionsWithIcons = computed(() =>
           v-html="suggestionsWithIcons || 'No suggestions available'"
         ></div>
       </section>
-
-      <section class="feedback-section code-section">
-        <h3>Suggested Plot Code</h3>
-        <div class="code-container">
-          <pre
-            class="code-block"
-          ><code>{{ feedbackData.plotCode || "No code generated" }}</code></pre>
-        </div>
-      </section>
     </div>
   </div>
 </template>

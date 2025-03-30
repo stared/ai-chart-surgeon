@@ -11,6 +11,14 @@ const plotContainer = ref<HTMLDivElement | null>(null);
 const errorMessage = ref<string | null>(null);
 const plotRendered = ref(false);
 
+// Define emits
+const emit = defineEmits(["reset"]);
+
+// Function to handle reset/try again
+function handleReset() {
+  emit("reset");
+}
+
 // Function to safely render the plot
 function renderPlot() {
   // Clear any previous error
@@ -126,6 +134,13 @@ watch(
     <div v-else class="placeholder">
       <p>The AI-generated chart will appear here</p>
     </div>
+
+    <!-- Try again button -->
+    <div class="try-again-container" v-if="plotCode">
+      <button class="try-again-button" @click="handleReset">
+        Try with another chart
+      </button>
+    </div>
   </div>
 </template>
 
@@ -216,5 +231,35 @@ watch(
   justify-content: center;
   align-items: center;
   min-height: 200px;
+}
+
+.try-again-container {
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: center;
+}
+
+.try-again-button {
+  background: linear-gradient(45deg, #646cff, #8c84ff);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.8rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.try-again-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  background: linear-gradient(45deg, #7a7fff, #9e97ff);
+}
+
+.try-again-button:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 </style>

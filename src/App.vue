@@ -31,6 +31,15 @@ async function handleFileUploaded(file: File) {
     isAnalyzing.value = false;
   }
 }
+
+function handleReset() {
+  // Reset the state to allow uploading a new file
+  uploadedFile.value = null;
+  isAnalyzing.value = false;
+  analysisComplete.value = false;
+  plotCode.value = "";
+  feedbackData.value = null;
+}
 </script>
 
 <template>
@@ -44,11 +53,15 @@ async function handleFileUploaded(file: File) {
 
     <div class="content-container">
       <div class="column left-column">
-        <FileUpload @file-uploaded="handleFileUploaded" />
+        <FileUpload v-if="!uploadedFile" @file-uploaded="handleFileUploaded" />
 
         <ChartDisplay v-if="uploadedFile" :file="uploadedFile" />
 
-        <ChartRedo v-if="analysisComplete" :plotCode="plotCode" />
+        <ChartRedo
+          v-if="analysisComplete"
+          :plotCode="plotCode"
+          @reset="handleReset"
+        />
       </div>
 
       <div class="column right-column">
