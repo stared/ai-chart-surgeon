@@ -155,7 +155,7 @@ Respond ONLY with a valid JSON object containing the keys:
 - "weaknesses": An array of string points about what doesn't work well  
 - "suggestions": An array of string points about how to improve the chart
 - "roast": A brief Reddit-style roast of the chart (1-3 sentences) with a killer punchline. Be brutal, edgy, witty, and clever. Refer to the topic graph is about, which you use as the base of your roast metaphors (and the opening phrase). Roast of the chart focusing on its specific flaws, design choices, missed intentions, and implied problems with its creator. Write it in a way that will make good laughs.
-- "plotCode": A string containing JavaScript code for Observable Plot. Inline extracted data.
+- "plotCode": A string containing JavaScript code for Observable Plot. Extract data from plot and inline it in the observable code. Make correct use of labels. Refine it so it is the best possible plot for the data, using best practices for readability, clarity, and aesthetics. Prefere simplicity and clarity over complexity and cleverness.
 
 IMPORTANT: For the "plotCode" value, use double-quoted strings and properly escape any internal quotes. Line breaks must be escaped with \\n. This is crucial for valid JSON format.
 
@@ -188,6 +188,7 @@ The plotCode should assume data is implicitly available and focus on the plottin
     const response = await anthropic.messages.create({
       model: "claude-3-5-sonnet-20241022", // Updated to Claude 3.5 Sonnet
       max_tokens: 2048,
+      temperature: 0.0,
       system: systemPrompt,
       messages: [userMessage],
     });
