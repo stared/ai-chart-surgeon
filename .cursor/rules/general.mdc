@@ -18,7 +18,7 @@ alwaysApply: true
 - Use TypeScript according to best rules. 
 - Type things properly, avoiding optional types (unless it is a conscious decision).
 - Don't use "any" unless there is not other way around.
-- Don't use folder-ups "../" in imports - specify path.
+- Don't use folder-ups "../" in imports - specify path. NEVER EVER use in Vue files "../" under no circumstances. 
 - We use yarn package manager.
 - Installed things are in @package.json.
 
