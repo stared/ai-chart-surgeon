@@ -1,0 +1,29 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
+# General rules
+
+- It is a simple, one-page app (no touter!) that you upload a chart, get feedback from AI, and plot remaster in Plot library.
+- Create clean, well-designed code that will make maintainters happy. Less code is better.
+- Properly encapsulate things, with good, well-desgined interfaces.
+- Use types consistently. Avoid any and optional types unless strictly necessary.
+- Don't pass errors silently. If you have an assumption about code and it is brokes, there should be an error.
+- Think twice before nesting conditional instructions, if there is no cleaner way.
+- Don't repeat yourself - split code in clear, composable blocks.
+- IMORTANT: If you have made a decision, explain why and first ask me if to follow. If I agree, proceed.
+- Be default, install newest version of libraries.
+- Use TypeScript according to best rules. 
+- Type things properly, avoiding optional types (unless it is a conscious decision).
+- Don't use "any" unless there is not other way around.
+- Don't use folder-ups "../" in imports - specify path.
+- We use yarn package manager.
+- Installed things are in @package.json.
+
+# Design
+
+- Design is minimal yet playful, for nerds.
+- Vibe close to tools like ChatGPT, Linear.app, MidJourney - focused yet playful.
+
