@@ -1,0 +1,1 @@
+{"root":["./src/main.ts","./src/types.ts","./src/vite-env.d.ts","./src/services/anthropic.ts","./src/App.vue","./src/components/ChartDisplay.vue","./src/components/ChartFeedback.vue","./src/components/ChartRedo.vue","./src/components/FileUpload.vue","./vite.config.ts"],"errors":true,"version":"5.7.3"}
